@@ -3,6 +3,10 @@ import csv
 from datetime import date
 from pathlib import Path
 
+RED = "\033[31m"
+BLUE = "\033[34m"
+RESET = "\033[0m"
+
 class WeatherReading:
     def __init__(self, temp_date, max_temp, min_temp, humidity):
         self.temp_date = temp_date
@@ -39,6 +43,15 @@ class YearlyReading:
             f"humidity: {self.humidity}, "
             f"humidity_date: {self.humidity_date}, "
         )
+
+
+class MonthlyReading:
+    def __init__(self, year, month, avg_highest_temp, avg_lowest_temp, avg_humidity):
+        self.year = year
+        self.month = month
+        self.avg_highest_temp = avg_highest_temp
+        self.avg_lowest_temp = avg_lowest_temp
+        self.avg_humidity = avg_humidity
 
 
 def parse_int(value):
@@ -131,11 +144,71 @@ def format_yearly_report(report):
 
     return f"{highest_line} \n{lowest_line} \n{humidity_line}"
 
+def calculate_monthly_report(readings, year, month):
+    month_reading = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
+
+    if not month_reading:
+        raise ValueError(f"No data available for year {year}.")
+
+    avg_highest_temp = round(sum(temp.max_temp for temp in month_reading if temp.max_temp is not None) / len(month_reading))
+
+    avg_lowest_temp = round(sum(temp.min_temp for temp in month_reading if temp.min_temp is not None) / len(month_reading))
+
+    avg_humidity = round(sum(temp.humidity for temp in month_reading if temp.humidity is not None) / len(month_reading))
+
+    return MonthlyReading(
+        year = year,
+        month = month,
+        avg_highest_temp = avg_highest_temp,
+        avg_lowest_temp = avg_lowest_temp,
+        avg_humidity = avg_humidity,
+    )
+
+
+def format_monthly_report(report):
+    highest_line = f'Highest Average: {report.avg_highest_temp}C'
+    lowest_line = f'Lowest Average: {report.avg_lowest_temp}C'
+    humidity_line = f'Average Mean Humidity: {report.avg_humidity}%'
+
+    return f"{highest_line} \n{lowest_line} \n{humidity_line}"
+
+def calculate_monthly_chart_report(readings, year, month):
+    month_reading = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
+
+    if not month_reading:
+        raise ValueError(f"No data available for year {year}.")
+
+    month = month_reading[0].temp_date.strftime('%B')
+
+    print(f'{month} {year}\n')
+
+    for reading in month_reading:
+        day = reading.temp_date.day
+
+        if reading.max_temp is not None:
+            max_bar = '+' * reading.max_temp
+            print(f'{day} {RED}{max_bar}{RESET} {reading.max_temp}C')
+
+        if reading.min_temp is not None:
+            min_bar = '+' * reading.min_temp
+            print(f'{day:02d} {BLUE}{min_bar}{RESET} {reading.min_temp}C')
+
+def format_monthly_chart_report(report):
+    highest_line = f'Highest Average: {report.avg_highest_temp}C'
+    lowest_line = f'Lowest Average: {report.avg_lowest_temp}C'
+    humidity_line = f'Average Mean Humidity: {report.avg_humidity}%'
+
+    return f"{highest_line} \n{lowest_line} \n{humidity_line}"
+
+
+
 def build_arg_parser():
     parser = argparse.ArgumentParser(description = "A program that generate weather report")
 
     parser.add_argument('report_dir', type = Path)
-    parser.add_argument('-e', '--year-reports', dest = 'year_reports', required=True)
+    parser.add_argument('-e', '--year-reports', dest = 'year_reports')
+    parser.add_argument('-a', '--month-report', dest='month_report')
+    parser.add_argument('-c', '--month-chart-report', dest='month_chart_report')
 
     return parser
 
@@ -148,6 +221,15 @@ def main():
     if args.year_reports:
         report = calculate_yearly_report(readings, parse_int(args.year_reports))
         print(format_yearly_report(report))
+
+    if args.month_report:
+        year, month = args.month_report.split('/')
+        report = calculate_monthly_report(readings, parse_int(year), parse_int(month))
+        print(format_monthly_report(report))
+
+    if args.month_chart_report:
+        year, month = args.month_chart_report.split('/')
+        calculate_monthly_chart_report(readings, parse_int(year), parse_int(month))
 
 if __name__ == '__main__':
     main()
