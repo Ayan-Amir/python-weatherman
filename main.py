@@ -95,17 +95,20 @@ def calculate_yearly_report(readings, year):
 
     highest_temp = max(
         (temp for temp in year_reading if temp.max_temp is not None),
-        key=lambda reading: reading.max_temp
+        key=lambda reading: reading.max_temp,
+        default=None
     )
 
     lowest_temp = min(
         (temp for temp in year_reading if temp.min_temp is not None),
-        key=lambda reading: reading.min_temp
+        key=lambda reading: reading.min_temp,
+        default=None
     )
 
     humidity = max(
         (temp for temp in year_reading if temp.humidity is not None),
-        key=lambda reading: reading.humidity
+        key=lambda reading: reading.humidity,
+        default=None
     )
 
     if not (highest_temp and lowest_temp and humidity):
