@@ -36,8 +36,8 @@ class YearlyReading:
             f"highest_date: {self.highest_date}, "
             f"lowest_temp: {self.lowest_temp}, "
             f"lowest_date: {self.lowest_date}, "
-            f"humidity: {self.humidity}, ",
-            f"humidity_date: {self.humidity_date}, ",
+            f"humidity: {self.humidity}, "
+            f"humidity_date: {self.humidity_date}, "
         )
 
 
@@ -74,8 +74,8 @@ def parse_weather_file(file_path):
                 min_temp = parse_int(row[min_temp_idx]),
                 humidity = parse_int(row[humidity_idx])
             )
+            readings.append(reading)
 
-        readings.append(reading)
     return readings
 
 def load_readings(report_dir):
