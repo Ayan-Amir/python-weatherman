@@ -88,7 +88,6 @@ def parse_weather_file(file_path):
                 humidity = parse_int(row[humidity_idx])
             )
             readings.append(reading)
-
     return readings
 
 def load_readings(report_dir):
@@ -199,8 +198,6 @@ def format_monthly_chart_report(report):
     humidity_line = f'Average Mean Humidity: {report.avg_humidity}%'
 
     return f"{highest_line} \n{lowest_line} \n{humidity_line}"
-
-
 
 def build_arg_parser():
     parser = argparse.ArgumentParser(description = "A program that generate weather report")
