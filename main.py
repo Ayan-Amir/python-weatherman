@@ -55,7 +55,7 @@ class MonthlyReading:
 
 
 def parse_int(value):
-   return int(value) if value != '' else None
+    return int(value) if value != '' else None
 
 def parse_weather_file(file_path):
     readings = []
@@ -63,6 +63,9 @@ def parse_weather_file(file_path):
     with file_path.open('r') as file:
         reader = csv.reader(file)
         header = next(reader, None)
+
+        if not header:
+            return readings
 
         try:
             date_idx = header.index("PKT")
@@ -77,8 +80,10 @@ def parse_weather_file(file_path):
 
             try:
                 year, month, day = [parse_int(part) for part in date_text.split("-")]
+                if None in (year, month, day):
+                    continue
                 reading_date = date(year, month, day)
-            except ValueError:
+            except (ValueError, TypeError):
                 continue
 
             reading = WeatherReading(
