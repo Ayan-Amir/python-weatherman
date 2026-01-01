@@ -55,7 +55,10 @@ class MonthlyReading:
 
 
 def parse_int(value):
-    return int(value) if value != '' else None
+    try:
+        return int(value) if value != '' else None
+    except (ValueError, TypeError):
+        return None
 
 def parse_weather_file(file_path):
     readings = []
@@ -76,23 +79,21 @@ def parse_weather_file(file_path):
             return readings
 
         for row in reader:
-            date_text = row[date_idx]
-
             try:
+                date_text = row[date_idx]
                 year, month, day = [parse_int(part) for part in date_text.split("-")]
                 if None in (year, month, day):
                     continue
                 reading_date = date(year, month, day)
-            except (ValueError, TypeError):
+                reading = WeatherReading(
+                    temp_date = reading_date,
+                    max_temp = parse_int(row[max_temp_idx]),
+                    min_temp = parse_int(row[min_temp_idx]),
+                    humidity = parse_int(row[humidity_idx])
+                )
+                readings.append(reading)
+            except (ValueError, TypeError, IndexError):
                 continue
-
-            reading = WeatherReading(
-                temp_date = reading_date,
-                max_temp = parse_int(row[max_temp_idx]),
-                min_temp = parse_int(row[min_temp_idx]),
-                humidity = parse_int(row[humidity_idx])
-            )
-            readings.append(reading)
     return readings
 
 def load_readings(report_dir):
@@ -154,11 +155,16 @@ def calculate_monthly_report(readings, year, month):
     if not month_reading:
         raise ValueError(f"No data available for year {year}.")
 
-    avg_highest_temp = round(sum(temp.max_temp for temp in month_reading if temp.max_temp is not None) / len(month_reading))
+    valid_highs = [temp.max_temp for temp in month_reading if temp.max_temp is not None]
+    valid_lows = [temp.min_temp for temp in month_reading if temp.min_temp is not None]
+    valid_humidity = [temp.humidity for temp in month_reading if temp.humidity is not None]
 
-    avg_lowest_temp = round(sum(temp.min_temp for temp in month_reading if temp.min_temp is not None) / len(month_reading))
+    if not (valid_highs and valid_lows and valid_humidity):
+        raise ValueError(f"Incomplete data for {year}-{month:02d}.")
 
-    avg_humidity = round(sum(temp.humidity for temp in month_reading if temp.humidity is not None) / len(month_reading))
+    avg_highest_temp = round(sum(valid_highs) / len(valid_highs))
+    avg_lowest_temp = round(sum(valid_lows) / len(valid_lows))
+    avg_humidity = round(sum(valid_humidity) / len(valid_humidity))
 
     return MonthlyReading(
         year = year,
@@ -190,11 +196,11 @@ def calculate_monthly_chart_report(readings, year, month):
         day = reading.temp_date.day
 
         if reading.max_temp is not None:
-            max_bar = '+' * reading.max_temp
-            print(f'{day} {RED}{max_bar}{RESET} {reading.max_temp}C')
+            max_bar = '+' * abs(reading.max_temp)
+            print(f'{day:02d} {RED}{max_bar}{RESET} {reading.max_temp}C')
 
         if reading.min_temp is not None:
-            min_bar = '+' * reading.min_temp
+            min_bar = '+' * abs(reading.min_temp)
             print(f'{day:02d} {BLUE}{min_bar}{RESET} {reading.min_temp}C')
 
 def format_monthly_chart_report(report):
