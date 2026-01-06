@@ -186,7 +186,7 @@ def calculate_monthly_chart_report(readings, year, month):
     month_reading = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
 
     if not month_reading:
-        raise ValueError(f"No data available for year {year}.")
+        raise ValueError(f"No data available for year {year}-{month}.")
 
     month = month_reading[0].temp_date.strftime('%B')
 
