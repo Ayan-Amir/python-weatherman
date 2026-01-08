@@ -148,7 +148,7 @@ def calculate_monthly_report(readings, year, month):
     month_readings = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
 
     if not month_readings:
-        raise ValueError(f"No data available for year {year}-{month}.")
+        raise ValueError(f"No data available for {year}-{month}.")
 
     valid_highs = [temp.max_temp for temp in month_readings if temp.max_temp is not None]
     valid_lows = [temp.min_temp for temp in month_readings if temp.min_temp is not None]
@@ -189,7 +189,7 @@ def generate_monthly_chart_report(readings, year, month):
     month_readings = [reading for reading in readings if reading.temp_date.year == parsed_year and reading.temp_date.month == parsed_month]
 
     if not month_readings:
-        raise ValueError(f"No data available for year {parsed_year}-{parsed_month}.")
+        raise ValueError(f"No data available for {parsed_year}-{parsed_month}.")
 
     month_name = month_readings[0].temp_date.strftime("%B")
 
@@ -199,11 +199,13 @@ def generate_monthly_chart_report(readings, year, month):
         day = reading.temp_date.day
 
         if reading.max_temp is not None:
-            max_bar = "+" * abs(reading.max_temp)
+            max_bar_len = abs(reading.max_temp) or 1
+            max_bar = "+" * max_bar_len
             print(f"{day:02d} {RED}{max_bar}{RESET} {reading.max_temp}C")
 
         if reading.min_temp is not None:
-            min_bar = "+" * abs(reading.min_temp)
+            min_bar_len = abs(reading.min_temp) or 1
+            min_bar = "+" * min_bar_len
             print(f"{day:02d} {BLUE}{min_bar}{RESET} {reading.min_temp}C")
 
 def build_arg_parser():
