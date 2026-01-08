@@ -210,9 +210,9 @@ def build_arg_parser():
     parser = argparse.ArgumentParser(description = "A program that generate weather report")
 
     parser.add_argument("report_dir", type = Path)
-    parser.add_argument("-e", "--year-reports", dest = "year_reports", type=int)
-    parser.add_argument("-a", "--month-report", dest="month_reports")
-    parser.add_argument("-c", "--month-chart-report", dest="month_chart_reports")
+    parser.add_argument("-e", "--year-reports", dest = "year_report", type=int)
+    parser.add_argument("-a", "--month-report", dest="month_report")
+    parser.add_argument("-c", "--month-chart-report", dest="month_chart_report")
 
     return parser
 
@@ -222,15 +222,15 @@ def main():
 
     readings = load_readings(args.report_dir)
 
-    if args.year_reports:
-        generate_yearly_report(readings, args.year_reports)
+    if args.year_report:
+        generate_yearly_report(readings, args.year_report)
 
-    if args.month_reports:
-        year, month = args.month_reports.split("/")
+    if args.month_report:
+        year, month = args.month_report.split("/")
         generate_monthly_report(readings, year, month)
 
-    if args.month_chart_reports:
-        year, month = args.month_chart_reports.split("/")
+    if args.month_chart_report:
+        year, month = args.month_chart_report.split("/")
         generate_monthly_chart_report(readings, year, month)
 
 if __name__ == "__main__":
