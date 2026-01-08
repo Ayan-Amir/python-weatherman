@@ -28,7 +28,7 @@ class YearlyReading:
 
 @dataclass
 class MonthlyReading:
-    year = int
+    year: int
     month: int
     avg_highest_temp: int
     avg_lowest_temp: int
@@ -118,7 +118,7 @@ def calculate_yearly_report(readings, year):
         default=None
     )
 
-    if highest_temp is None and lowest_temp is None and humidity is None:
+    if highest_temp is None or lowest_temp is None or humidity is None:
         raise ValueError(f"Incomplete data for year {year}.")
 
     return YearlyReading(
@@ -131,25 +131,31 @@ def calculate_yearly_report(readings, year):
         humidity_date = humidity.temp_date
     )
 
-def format_yearly_report(report):
+
+
+def generate_yearly_report(readings, year):
+    parsed_year = parse_int(year)
+
+    report = calculate_yearly_report(readings, parsed_year)
+    
     highest_line = f"Highest: {report.highest_temp}C on {report.highest_date.strftime('%B %d')}"
     lowest_line = f"Lowest: {report.lowest_temp}C on {report.lowest_date.strftime('%B %d')}"
     humidity_line = f"Humidity: {report.humidity}% on {report.humidity_date.strftime('%B %d')}"
-
-    return f"{highest_line} \n{lowest_line} \n{humidity_line}"
+    
+    print(f"{highest_line} \n{lowest_line} \n{humidity_line}")
 
 def calculate_monthly_report(readings, year, month):
     month_readings = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
 
     if not month_readings:
-        raise ValueError(f"No data available for year {year}-{month:02d}.")
+        raise ValueError(f"No data available for year {year}-{month}.")
 
     valid_highs = [temp.max_temp for temp in month_readings if temp.max_temp is not None]
     valid_lows = [temp.min_temp for temp in month_readings if temp.min_temp is not None]
     valid_humidity = [temp.humidity for temp in month_readings if temp.humidity is not None]
 
     if not (valid_highs and valid_lows and valid_humidity):
-        raise ValueError(f"Incomplete data for {year}-{month:02d}.")
+        raise ValueError(f"Incomplete data for {year}-{month}.")
 
     avg_highest_temp = round(sum(valid_highs) / len(valid_highs))
     avg_lowest_temp = round(sum(valid_lows) / len(valid_lows))
@@ -163,22 +169,31 @@ def calculate_monthly_report(readings, year, month):
         avg_humidity = avg_humidity,
     )
 
-def format_monthly_report(report):
+
+def generate_monthly_report(readings, year, month):
+    parsed_year = parse_int(year)
+    parsed_month = parse_int(month)
+
+    report = calculate_monthly_report(readings, parsed_year, parsed_month)
+    
     highest_line = f"Highest Average: {report.avg_highest_temp}C"
     lowest_line = f"Lowest Average: {report.avg_lowest_temp}C"
     humidity_line = f"Average Mean Humidity: {report.avg_humidity}%"
 
-    return f"{highest_line} \n{lowest_line} \n{humidity_line}"
+    print(f"{highest_line} \n{lowest_line} \n{humidity_line}")
 
-def calculate_monthly_chart_report(readings, year, month):
-    month_readings = [reading for reading in readings if reading.temp_date.year == year and reading.temp_date.month == month]
+def generate_monthly_chart_report(readings, year, month):
+    parsed_year = parse_int(year)
+    parsed_month = parse_int(month)
+
+    month_readings = [reading for reading in readings if reading.temp_date.year == parsed_year and reading.temp_date.month == parsed_month]
 
     if not month_readings:
-        raise ValueError(f"No data available for year {year}-{month:02d}.")
+        raise ValueError(f"No data available for year {parsed_year}-{parsed_month}.")
 
-    month = month_readings[0].temp_date.strftime("%B")
+    month_name = month_readings[0].temp_date.strftime("%B")
 
-    print(f"{month} {year}\n")
+    print(f"{month_name} {parsed_year}\n")
 
     for reading in month_readings:
         day = reading.temp_date.day
@@ -191,20 +206,13 @@ def calculate_monthly_chart_report(readings, year, month):
             min_bar = "+" * abs(reading.min_temp)
             print(f"{day:02d} {BLUE}{min_bar}{RESET} {reading.min_temp}C")
 
-def format_monthly_chart_report(report):
-    highest_line = f"Highest Average: {report.avg_highest_temp}C"
-    lowest_line = f"Lowest Average: {report.avg_lowest_temp}C"
-    humidity_line = f"Average Mean Humidity: {report.avg_humidity}%"
-
-    return f"{highest_line} \n{lowest_line} \n{humidity_line}"
-
 def build_arg_parser():
     parser = argparse.ArgumentParser(description = "A program that generate weather report")
 
     parser.add_argument("report_dir", type = Path)
-    parser.add_argument("-e", "--year-reports", dest = "year_reports")
-    parser.add_argument("-a", "--month-report", dest="month_report")
-    parser.add_argument("-c", "--month-chart-report", dest="month_chart_report")
+    parser.add_argument("-e", "--year-reports", dest = "year_reports", type=int)
+    parser.add_argument("-a", "--month-report", dest="month_reports")
+    parser.add_argument("-c", "--month-chart-report", dest="month_chart_reports")
 
     return parser
 
@@ -215,17 +223,15 @@ def main():
     readings = load_readings(args.report_dir)
 
     if args.year_reports:
-        report = calculate_yearly_report(readings, parse_int(args.year_reports))
-        print(format_yearly_report(report))
+        generate_yearly_report(readings, args.year_reports)
 
-    if args.month_report:
-        year, month = args.month_report.split("/")
-        report = calculate_monthly_report(readings, parse_int(year), parse_int(month))
-        print(format_monthly_report(report))
+    if args.month_reports:
+        year, month = args.month_reports.split("/")
+        generate_monthly_report(readings, year, month)
 
-    if args.month_chart_report:
-        year, month = args.month_chart_report.split("/")
-        calculate_monthly_chart_report(readings, parse_int(year), parse_int(month))
+    if args.month_chart_reports:
+        year, month = args.month_chart_reports.split("/")
+        generate_monthly_chart_report(readings, year, month)
 
 if __name__ == "__main__":
     main()
