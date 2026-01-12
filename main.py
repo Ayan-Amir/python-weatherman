@@ -3,11 +3,7 @@ import csv
 from datetime import date
 from pathlib import Path
 from dataclasses import dataclass
-from constants import DATE_KEY, MAX_TEMP_KEY, MIN_TEMP_KEY, MAX_HUMIDITY_KEY
-
-RED = "\033[31m"
-BLUE = "\033[34m"
-RESET = "\033[0m"
+from constants import DATE_KEY, MAX_TEMP_KEY, MIN_TEMP_KEY, MAX_HUMIDITY_KEY, RED, BLUE, RESET
 
 @dataclass
 class WeatherReading:
